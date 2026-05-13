@@ -1,6 +1,8 @@
 import requests
 import json
+import time
 import boto3
+from botocore.exceptions import ClientError, EndpointConnectionError, EndpointResolutionError
 from datetime import datetime, timezone
 
 
@@ -53,7 +55,7 @@ def compute_kpis(coins):
     }
 
 
-def save_kpis(kpis):
+def save_kpis(kpis, retries=5, delay=3):
     """Save KPIs to MinIO."""
     s3 = boto3.client(
         "s3",
@@ -61,12 +63,29 @@ def save_kpis(kpis):
         aws_access_key_id="minioadmin",
         aws_secret_access_key="minioadmin",
     )
-    s3.put_object(
-        Bucket="crypto-kpis",
-        Key="latest.json",
-        Body=json.dumps(kpis, indent=2),
-        ContentType="application/json",
-    )
+
+    for attempt in range(1, retries + 1):
+        try:
+            try:
+                s3.head_bucket(Bucket="crypto-kpis")
+            except ClientError as e:
+                if e.response["Error"]["Code"] == "404":
+                    s3.create_bucket(Bucket="crypto-kpis")
+                else:
+                    raise
+
+            s3.put_object(
+                Bucket="crypto-kpis",
+                Key="latest.json",
+                Body=json.dumps(kpis, indent=2),
+                ContentType="application/json",
+            )
+            return
+        except (EndpointConnectionError, EndpointResolutionError):
+            if attempt == retries:
+                raise
+            print(f"MinIO not reachable, retrying in {delay}s ({attempt}/{retries})...")
+            time.sleep(delay)
 
 
 def main():
