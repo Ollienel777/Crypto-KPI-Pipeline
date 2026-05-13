@@ -42,7 +42,11 @@ def compute_kpis(coins):
     total_market_cap = sum(c["market_cap"] for c in coins)
     avg_market_cap = total_market_cap / len(coins)
 
-    top_volume = sorted(coins, key=lambda c: c["total_volume"], reverse=True)[:3]
+    top_volume = sorted(
+        [c for c in coins if c["total_volume"] is not None],
+        key=lambda c: c["total_volume"],
+        reverse=True,
+    )[:3]
 
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
