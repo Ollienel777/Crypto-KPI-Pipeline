@@ -33,3 +33,14 @@ response isn't a non-empty list.
 any failure crashed the process before Streamlit could render anything. Wrapped
 in a try/except with `st.error()` and `st.stop()` so the user sees a clean
 message instead of a traceback.
+
+
+## Improvement — Environment variable config
+
+MinIO endpoint, credentials, and bucket name were hardcoded identically in
+`main.py`, `dashboard.py`, and `docker-compose.yml`. Rotating credentials
+required touching three files.
+
+Moved to `os.environ.get()` with defaults so the stack still works out of the
+box. `docker-compose.yml` now passes them explicitly — switching environments
+is a config change, not a code change.

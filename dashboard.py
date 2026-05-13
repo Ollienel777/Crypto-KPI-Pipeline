@@ -1,21 +1,27 @@
+import os
 import streamlit as st
 import boto3
 import json
+
+MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://minio:9000")
+MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
+MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY", "minioadmin")
+MINIO_BUCKET = os.environ.get("MINIO_BUCKET", "crypto-kpis")
 
 st.set_page_config(page_title="Crypto KPI Dashboard", page_icon="📊")
 st.title("Crypto KPI Dashboard")
 
 s3 = boto3.client(
     "s3",
-    endpoint_url="http://minio:9000",
-    aws_access_key_id="minioadmin",
-    aws_secret_access_key="minioadmin",
+    endpoint_url=MINIO_ENDPOINT,
+    aws_access_key_id=MINIO_ACCESS_KEY,
+    aws_secret_access_key=MINIO_SECRET_KEY,
 )
 
 try:
-    obj = s3.get_object(Bucket="crypto-kpis", Key="latest.json")
+    obj = s3.get_object(Bucket=MINIO_BUCKET, Key="latest.json")
     data = json.loads(obj["Body"].read())
-except Exception as e:
+except Exception:
     st.error("No data available yet — run the pipeline first.")
     st.stop()
 

@@ -18,6 +18,11 @@ services:
     command: python main.py
     depends_on:
       - minio
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: crypto-kpis
 
   dashboard:
     build: .
@@ -26,6 +31,11 @@ services:
       - "8501:8501"
     depends_on:
       - minio
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: crypto-kpis
 
 volumes:
   minio-data:
