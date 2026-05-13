@@ -55,3 +55,17 @@ Price change tells you what moved — volume tells you whether it had conviction
 behind it. For liquidity providers specifically, the volume ranking surfaces
 where the flow is concentrated regardless of direction. Renders as its own
 section on the dashboard.
+
+## What I'd do next:
+
+With another two hours I'd add unit tests for compute_kpis() first. Both 
+correctness bugs lived there and a test with known inputs would have caught 
+them at commit time. 
+After that, scheduling: the pipeline runs once and exits, which means the 
+dashboard goes stale immediately. A simple cron job or loop with a 
+configurable interval would make it actually useful. I'd also add structured 
+logging to replace the print statements. When a pipeline run fails in 
+production you need to know which step failed and why, and plain prints don't 
+give you that. Finally, a MinIO healthcheck in docker-compose.yml so the 
+startup race condition is fixed at the infrastructure level rather than just 
+handled in application code.
