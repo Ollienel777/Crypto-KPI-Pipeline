@@ -59,15 +59,19 @@ section on the dashboard.
 
 ## Improvement: OOP refactor
 
-Restructured main.py into three classes: CoinGeckoClient (fetching),
-KPICalculator (KPI logic), MinIOStorage (persistence + retry). Each class has
-one responsibility. If the storage backend changes from MinIO to S3, only MinIOStorage changes.
-main() now reads as a clear pipeline sequence.
+Restructured main.py into three classes: CoinGeckoClient (fetching), KPICalculator (KPI logic), MinIOStorage (persistence + retry). Each class has
+one responsibility. If the storage backend changes from MinIO to S3, only MinIOStorage changes. main() now reads as a clear pipeline sequence.
 
+## Improvement: Structured logging + code cleanup
 
-## What I'd do next:
+Replaced all `print()` calls with Python's `logging` module. Retry warnings,
+success confirmation, and failures now log at the appropriate level (INFO,
+WARNING, ERROR) with timestamps. The dashboard logs the real exception
+server-side while still showing a generic message to the user.
 
-With another two hours I'd add unit tests for compute_kpis() first. Both correctness bugs lived there and a test with known inputs would have caught them at commit time. After that, scheduling: the pipeline runs once and exits, which means the dashboard goes stale immediately. A simple cron job or loop with a configurable interval would make it actually useful. I'd also add structured logging to replace the print statements. When a pipeline run fails in production you need to know which step failed and why, and plain prints don't give you that. Finally, a MinIO healthcheck in docker-compose.yml so the startup race condition is fixed at the infrastructure level rather than just handled in application code.
+Also extracted `_ensure_bucket_exists()` from `save_kpis()` to eliminate the
+nested try block and give the operation a clear name.
 
-#auto test, 
-CI/CD
+## What I'd do next
+
+Add unit tests for compute_kpis() first. Both correctness bugs lived there and a test with known inputs would have caught them at commit time. I'd also add scheduling: the pipeline runs once and exits, which means the dashboard goes stale immediately. A simple cron job or loop with a configurable interval would make it actually useful. I'd also add exponential backoff to the MinIO retry loop. The current fixed delay works but a proper backoff with jitter is more resilient under sustained outages. Finally, a MinIO healthcheck in docker-compose.yml so the startup race condition is fixed at the infrastructure level rather than just handled in application code.
