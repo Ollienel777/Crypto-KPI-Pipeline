@@ -67,3 +67,7 @@ keep it focused: one new KPI, surfaces cleanly on the dashboard as its own secti
 
 **Prompt 16**
 noticed the same issue as before, total_volume can also be none, would the sort will crash on none < float if there's missing data
+
+**Prompt 16**
+refactor main.py into three classes: CoinGeckoClient handles fetching, KPICalculator handles compute_kpis(), MinIOStorage handles save_kpis() including the retry logic and bucket creation
+config (env vars) moves into init where relevant. main() stays as the entry point, just instantiates and calls them. No logic changes, pure restructuring.
