@@ -12,7 +12,7 @@ Fixed `datetime.now()` → `datetime.now(timezone.utc)` — naive timestamps are
 non-deterministic across container timezones.
 
 
-## Bug 2 — NoSuchBucket crash + startup race condition
+## Bug 2: NoSuchBucket crash + startup race condition
 `save_kpis()` called `put_object` against a bucket that was never created.
 Fixed with a `head_bucket` check first — creates only on 404, re-raises on
 anything else so auth errors still surface.
