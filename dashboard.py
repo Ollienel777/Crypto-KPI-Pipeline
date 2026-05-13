@@ -1,7 +1,10 @@
 import os
+import logging
 import streamlit as st
 import boto3
 import json
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT", "http://minio:9000")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY", "minioadmin")
@@ -21,7 +24,8 @@ s3 = boto3.client(
 try:
     obj = s3.get_object(Bucket=MINIO_BUCKET, Key="latest.json")
     data = json.loads(obj["Body"].read())
-except Exception:
+except Exception as e:
+    logging.error("Failed to load KPI data: %s", e)
     st.error("No data available yet — run the pipeline first.")
     st.stop()
 

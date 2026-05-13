@@ -1,10 +1,13 @@
 import os
+import logging
 import requests
 import json
 import time
 import boto3
 from botocore.exceptions import ClientError, EndpointConnectionError, EndpointResolutionError
 from datetime import datetime, timezone
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
 class CoinGeckoClient:
@@ -86,28 +89,32 @@ class MinIOStorage:
             aws_secret_access_key=os.environ.get("MINIO_SECRET_KEY", "minioadmin"),
         )
 
+    def _ensure_bucket_exists(self):
+        try:
+            self.s3.head_bucket(Bucket=self.bucket)
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                self.s3.create_bucket(Bucket=self.bucket)
+            else:
+                raise
+
     def save_kpis(self, kpis):
         for attempt in range(1, self.retries + 1):
             try:
-                try:
-                    self.s3.head_bucket(Bucket=self.bucket)
-                except ClientError as e:
-                    if e.response["Error"]["Code"] == "404":
-                        self.s3.create_bucket(Bucket=self.bucket)
-                    else:
-                        raise
-
+                self._ensure_bucket_exists()
                 self.s3.put_object(
                     Bucket=self.bucket,
                     Key="latest.json",
                     Body=json.dumps(kpis, indent=2),
                     ContentType="application/json",
                 )
+                logging.info("KPIs saved successfully to %s/latest.json", self.bucket)
                 return
             except (EndpointConnectionError, EndpointResolutionError):
                 if attempt == self.retries:
+                    logging.error("MinIO not reachable after %d attempts, giving up.", self.retries)
                     raise
-                print(f"MinIO not reachable, retrying in {self.delay}s ({attempt}/{self.retries})...")
+                logging.warning("MinIO not reachable, retrying in %ds (%d/%d)...", self.delay, attempt, self.retries)
                 time.sleep(self.delay)
 
 
@@ -116,17 +123,17 @@ def main():
     calculator = KPICalculator()
     storage = MinIOStorage()
 
-    print("Fetching coins...")
+    logging.info("Fetching coins...")
     coins = client.fetch_top_coins()
-    print(f"Fetched {len(coins)} coins")
+    logging.info("Fetched %d coins", len(coins))
 
-    print("Computing KPIs...")
+    logging.info("Computing KPIs...")
     kpis = calculator.compute_kpis(coins)
 
-    print("Saving to MinIO...")
+    logging.info("Saving to MinIO...")
     storage.save_kpis(kpis)
 
-    print("Done!")
+    logging.info("Done!")
 
 
 if __name__ == "__main__":
