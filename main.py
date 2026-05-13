@@ -42,6 +42,8 @@ def compute_kpis(coins):
     total_market_cap = sum(c["market_cap"] for c in coins)
     avg_market_cap = total_market_cap / len(coins)
 
+    top_volume = sorted(coins, key=lambda c: c["total_volume"], reverse=True)[:3]
+
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "top_gainers": [
@@ -59,6 +61,14 @@ def compute_kpis(coins):
                 "change_24h": c["price_change_percentage_24h"],
             }
             for c in top_losers
+        ],
+        "top_volume": [
+            {
+                "name": c["name"],
+                "symbol": c["symbol"],
+                "volume_24h": c["total_volume"],
+            }
+            for c in top_volume
         ],
         "average_market_cap_usd": avg_market_cap,
         "total_market_cap_usd": total_market_cap,

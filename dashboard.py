@@ -38,3 +38,7 @@ for coin in data["top_gainers"]:
 st.subheader("📉 Top Losers (24h)")
 for coin in data["top_losers"]:
     st.write(f"**{coin['name']}** ({coin['symbol'].upper()}): {coin['change_24h']:+.2f}%")
+
+st.subheader("🔥 Highest Volume (24h)")
+for coin in data["top_volume"]:
+    st.write(f"**{coin['name']}** ({coin['symbol'].upper()}): ${coin['volume_24h']:,.0f}")

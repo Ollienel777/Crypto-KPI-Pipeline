@@ -44,3 +44,14 @@ required touching three files.
 Moved to `os.environ.get()` with defaults so the stack still works out of the
 box. `docker-compose.yml` now passes them explicitly — switching environments
 is a config change, not a code change.
+
+
+## Improvement — Top volume KPI
+
+Added a top-3-by-volume ranking to `compute_kpis()`. Volume is already in the
+CoinGecko response so no extra API call needed.
+
+Price change tells you what moved — volume tells you whether it had conviction
+behind it. For liquidity providers specifically, the volume ranking surfaces
+where the flow is concentrated regardless of direction. Renders as its own
+section on the dashboard.
