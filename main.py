@@ -1,7 +1,7 @@
 import requests
 import json
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def fetch_top_coins():
@@ -20,17 +20,18 @@ def fetch_top_coins():
 def compute_kpis(coins):
     """Compute KPIs from raw coin data."""
     # Sort coins by 24h price change
-    sorted_coins = sorted(coins, key=lambda c: c["price_change_percentage_24h"])
+    ranked_coins = [c for c in coins if c["price_change_percentage_24h"] is not None]
+    sorted_coins = sorted(ranked_coins, key=lambda c: c["price_change_percentage_24h"])
 
-    top_gainers = sorted_coins[:3]
-    top_losers = sorted_coins[-3:]
+    top_gainers = sorted_coins[-3:][::-1]
+    top_losers = sorted_coins[:3]
 
     # Compute average market cap across the top 10
     total_market_cap = sum(c["market_cap"] for c in coins)
     avg_market_cap = total_market_cap / len(coins)
 
     return {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "top_gainers": [
             {
                 "name": c["name"],
