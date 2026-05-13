@@ -12,8 +12,12 @@ s3 = boto3.client(
     aws_secret_access_key="minioadmin",
 )
 
-obj = s3.get_object(Bucket="crypto-kpis", Key="latest.json")
-data = json.loads(obj["Body"].read())
+try:
+    obj = s3.get_object(Bucket="crypto-kpis", Key="latest.json")
+    data = json.loads(obj["Body"].read())
+except Exception as e:
+    st.error("No data available yet — run the pipeline first.")
+    st.stop()
 
 st.caption(f"Last updated: {data['timestamp']}")
 

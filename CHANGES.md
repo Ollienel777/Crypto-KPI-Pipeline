@@ -21,3 +21,15 @@ Wrapped in a retry loop (5 attempts, 3s delay) because `depends_on: minio`
 only waits for the container to start, not for MinIO to actually be ready.
 On cold start the pipeline can fail before the hostname resolves or before
 MinIO accepts connections — the retry covers both.
+
+
+## Improvement on error handling
+
+`fetch_top_coins()`: added `timeout=10` and `raise_for_status()` so network
+hangs and non-200 responses fail loudly. Added a `ValueError` check if the
+response isn't a non-empty list.
+
+`dashboard.py`: the S3 call was at module level with no error handling —
+any failure crashed the process before Streamlit could render anything. Wrapped
+in a try/except with `st.error()` and `st.stop()` so the user sees a clean
+message instead of a traceback.

@@ -15,8 +15,12 @@ def fetch_top_coins():
         "per_page": 10,
         "page": 1,
     }
-    response = requests.get(url, params=params)
-    return response.json()
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+    if not isinstance(data, list) or len(data) == 0:
+        raise ValueError(f"Unexpected response from CoinGecko: {data}")
+    return data
 
 
 def compute_kpis(coins):
